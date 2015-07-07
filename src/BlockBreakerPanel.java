@@ -12,6 +12,8 @@ import javax.swing.JPanel;
 public class BlockBreakerPanel extends JPanel implements KeyListener {
 
     ArrayList<Block> blocks = new ArrayList<>();
+    ArrayList<Block> ball = new ArrayList<>();
+    int mBallSize = 25;
     Block mPaddle;
     Thread mThread;
     Animate mAnimate;
@@ -34,6 +36,13 @@ public class BlockBreakerPanel extends JPanel implements KeyListener {
         for (int i = 0; i<8; i++) {
             blocks.add(new Block((i*60+2),75,60,25,"yellow.png"));
         }
+        // Add ball in the middle, right above the paddle
+        ball.add(new Block(237, 437, 25, 25, "ball.png"));
+
+
+
+
+
         // add these two lines to read key presses
         addKeyListener(this);
         setFocusable(true);
@@ -42,13 +51,44 @@ public class BlockBreakerPanel extends JPanel implements KeyListener {
     @Override
     public void paintComponent(Graphics g){
         super.paintComponent(g);
+        // paint blocks
         for(Block b : blocks) {//for every Block b in blocks
             b.draw(g, this);
         }
+        // paint ball
+        for(Block b: ball){
+            b.draw(g,this);
+        }
+        // paint paddle
         mPaddle.draw(g,this);
     }
 
     public void update(){
+        for (Block ba : ball){
+            ba.x += ba.dx;
+            if(ba.x > (getWidth()-mBallSize) && ba.dx > 0 || ba.x < 0) {
+                ba.dx *= -1;
+            }
+            if(ba.y< 0 || ba.intersects(mPaddle)) {
+                // invert direction
+                ba.dy *= -1;
+            }
+            ba.y += ba.dy;
+            for(Block b : blocks){
+                // check left or right
+                if((b.left.intersects(ba)||b.right.intersects(ba)) && !b.destroyed){
+                    ba.dx *= -1;
+                    b.destroyed = true;
+                }
+
+
+                // for each block, check if it intersects with the ball
+                if(ba.intersects(b) && !b.destroyed){
+                    b.destroyed = true; // destroy block
+                    ba.dy *= -1; // flip ball direction;
+                }
+            }
+        }
         repaint(); //update screen
     }
 
